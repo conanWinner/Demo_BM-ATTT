@@ -1,0 +1,7 @@
+node_modules/
+extension/node_modules/
+server/node_modules/
+extension/dist/
+server/dist/
+*.js.map
+.kiro/

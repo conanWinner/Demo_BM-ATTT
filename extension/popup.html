@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Security Demo Extension</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      width: 400px;
+      min-height: 500px;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      font-size: 13px;
+    }
+
+    .warning-banner {
+      background: #ff3333;
+      color: #fff;
+      text-align: center;
+      padding: 8px 12px;
+      font-weight: bold;
+      font-size: 12px;
+      letter-spacing: 0.3px;
+    }
+
+    .demo-mode-bar {
+      background: #16213e;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #0f3460;
+    }
+
+    .demo-mode-label {
+      font-size: 13px;
+      color: #a0a0c0;
+    }
+
+    #toggleBtn {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 12px;
+      transition: background 0.2s;
+    }
+
+    #toggleBtn.active {
+      background: #e94560;
+      color: #fff;
+    }
+
+    #toggleBtn.inactive {
+      background: #4caf50;
+      color: #fff;
+    }
+
+    #demoStatus {
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    #demoStatus.active { color: #e94560; }
+    #demoStatus.inactive { color: #4caf50; }
+
+    .tabs {
+      display: flex;
+      background: #16213e;
+      border-bottom: 2px solid #0f3460;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      background: none;
+      border: none;
+      color: #a0a0c0;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: color 0.2s, border-bottom 0.2s;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+    }
+
+    .tab-btn.active {
+      color: #e94560;
+      border-bottom: 2px solid #e94560;
+    }
+
+    .tab-content {
+      display: none;
+      padding: 14px 16px;
+      overflow-y: auto;
+      max-height: 420px;
+    }
+
+    .tab-content.active { display: block; }
+
+    h2 {
+      font-size: 14px;
+      color: #e94560;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    h3 {
+      font-size: 13px;
+      color: #f0a500;
+      margin: 12px 0 6px;
+    }
+
+    .permission-item {
+      background: #16213e;
+      border-left: 3px solid #e94560;
+      border-radius: 4px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+    }
+
+    .permission-name {
+      font-family: monospace;
+      font-size: 13px;
+      color: #f0a500;
+      font-weight: bold;
+    }
+
+    .permission-danger {
+      margin-top: 4px;
+      color: #ff6b6b;
+      font-size: 12px;
+    }
+
+    .permission-desc {
+      margin-top: 3px;
+      color: #b0b0c8;
+      font-size: 12px;
+    }
+
+    .lesson-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .lesson-list li {
+      background: #16213e;
+      border-left: 3px solid #f0a500;
+      border-radius: 4px;
+      padding: 7px 10px;
+      margin-bottom: 7px;
+      color: #d0d0e8;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .lesson-list li::before {
+      content: "⚠ ";
+      color: #f0a500;
+    }
+
+    .step-list {
+      list-style: none;
+      counter-reset: steps;
+      padding: 0;
+    }
+
+    .step-list li {
+      counter-increment: steps;
+      background: #16213e;
+      border-radius: 4px;
+      padding: 8px 10px 8px 36px;
+      margin-bottom: 7px;
+      color: #d0d0e8;
+      font-size: 12px;
+      line-height: 1.5;
+      position: relative;
+    }
+
+    .step-list li::before {
+      content: counter(steps);
+      position: absolute;
+      left: 10px;
+      top: 8px;
+      background: #e94560;
+      color: #fff;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .settings-link {
+      display: inline-block;
+      background: #0f3460;
+      color: #64b5f6;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      margin: 6px 0;
+      cursor: pointer;
+      user-select: all;
+      border: 1px solid #1565c0;
+    }
+
+    .settings-link:hover { background: #1565c0; }
+
+    .settings-note {
+      font-size: 11px;
+      color: #888;
+      margin-top: 3px;
+      font-style: italic;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0;
+      font-size: 12px;
+    }
+
+    .comparison-table th {
+      background: #0f3460;
+      color: #64b5f6;
+      padding: 6px 8px;
+      text-align: left;
+    }
+
+    .comparison-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #1a1a3e;
+      color: #c0c0d8;
+      vertical-align: top;
+    }
+
+    .comparison-table tr:nth-child(even) td { background: #16213e; }
+
+    .defense-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .defense-list li {
+      background: #16213e;
+      border-left: 3px solid #4caf50;
+      border-radius: 4px;
+      padding: 7px 10px;
+      margin-bottom: 7px;
+      color: #d0d0e8;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .defense-list li::before {
+      content: "🛡 ";
+    }
+  </style>
+</head>
+<body>
+
+  <div class="warning-banner">
+    ⚠ Đây là extension demo giáo dục — KHÔNG cài trên trình duyệt cá nhân ⚠
+  </div>
+
+  <div class="demo-mode-bar">
+    <span class="demo-mode-label">Trạng thái: <span id="demoStatus">...</span></span>
+    <button id="toggleBtn">...</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="permissions">🔑 Quyền hạn</button>
+    <button class="tab-btn" data-tab="defense">🛡 Phòng thủ</button>
+  </div>
+
+  <!-- Tab: Quyền hạn -->
+  <div id="tab-permissions" class="tab-content active">
+
+    <h2>Quyền hạn đang sử dụng</h2>
+
+    <div class="permission-item">
+      <div class="permission-name">&lt;all_urls&gt;</div>
+      <div class="permission-danger">🔴 Nguy hiểm cao — Truy cập mọi trang web</div>
+      <div class="permission-desc">Cho phép extension đọc và thay đổi nội dung trên TẤT CẢ các trang web bạn truy cập, kể cả ngân hàng, email, mạng xã hội.</div>
+    </div>
+
+    <div class="permission-item">
+      <div class="permission-name">scripting</div>
+      <div class="permission-danger">🔴 Nguy hiểm cao — Thực thi mã tùy ý</div>
+      <div class="permission-desc">Cho phép extension chèn và chạy bất kỳ đoạn JavaScript nào vào trang web đang mở, có thể đánh cắp dữ liệu hoặc thay đổi giao diện.</div>
+    </div>
+
+    <div class="permission-item">
+      <div class="permission-name">activeTab</div>
+      <div class="permission-danger">🟡 Nguy hiểm trung bình — Truy cập tab hiện tại</div>
+      <div class="permission-desc">Cho phép đọc URL, tiêu đề và nội dung của tab đang mở khi người dùng tương tác với extension.</div>
+    </div>
+
+    <div class="permission-item">
+      <div class="permission-name">storage</div>
+      <div class="permission-danger">🟡 Nguy hiểm trung bình — Lưu trữ dữ liệu</div>
+      <div class="permission-desc">Cho phép extension lưu và đọc dữ liệu trên trình duyệt của bạn. Extension độc hại có thể dùng để lưu thông tin đánh cắp được.</div>
+    </div>
+
+    <h3>📚 Bài học rút ra</h3>
+    <ul class="lesson-list">
+      <li>Extension yêu cầu quyền <strong>&lt;all_urls&gt;</strong> hoặc <strong>scripting</strong> có thể đọc và thay đổi mọi thứ bạn làm trên trình duyệt — hãy từ chối nếu không thực sự cần thiết.</li>
+      <li>Extension không có trên Chrome Web Store chính thức hoặc được cài từ file <code>.crx</code> không rõ nguồn gốc là dấu hiệu đỏ rõ ràng.</li>
+      <li>Số lượt cài đặt thấp, không có đánh giá, hoặc nhà phát triển ẩn danh là những dấu hiệu đáng ngờ cần kiểm tra kỹ trước khi cài.</li>
+      <li>Extension yêu cầu nhiều quyền hơn chức năng thực sự cần (ví dụ: extension đổi theme lại xin quyền đọc mật khẩu) là dấu hiệu của phần mềm độc hại.</li>
+      <li>Popup hoặc trang cài đặt có lỗi chính tả, giao diện kém chuyên nghiệp, hoặc mô tả mơ hồ thường là dấu hiệu của extension giả mạo.</li>
+    </ul>
+
+  </div>
+
+  <!-- Tab: Phòng thủ -->
+  <div id="tab-defense" class="tab-content">
+
+    <h2>Hướng dẫn phòng thủ</h2>
+
+    <h3>🔒 Bật Enhanced Safe Browsing</h3>
+    <ol class="step-list">
+      <li>Mở Chrome và nhấn vào thanh địa chỉ.</li>
+      <li>Gõ địa chỉ sau và nhấn Enter:
+        <br/><span class="settings-link" title="Sao chép và dán vào thanh địa chỉ Chrome">chrome://settings/security</span>
+        <div class="settings-note">* Không thể click trực tiếp từ popup — hãy sao chép và dán vào thanh địa chỉ.</div>
+      </li>
+      <li>Tìm mục <strong>"Safe Browsing"</strong> trong trang cài đặt.</li>
+      <li>Chọn <strong>"Enhanced protection"</strong> (Bảo vệ nâng cao).</li>
+      <li>Xác nhận nếu Chrome hỏi về việc chia sẻ dữ liệu.</li>
+    </ol>
+
+    <h3>📊 Standard vs Enhanced Protection</h3>
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Tiêu chí</th>
+          <th>Standard</th>
+          <th>Enhanced</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Kiểm tra URL</td>
+          <td>Danh sách cục bộ</td>
+          <td>Kiểm tra thời gian thực với Google</td>
+        </tr>
+        <tr>
+          <td>Phát hiện extension độc hại</td>
+          <td>Hạn chế</td>
+          <td>Chủ động cảnh báo trước khi cài</td>
+        </tr>
+        <tr>
+          <td>Bảo vệ tải file</td>
+          <td>Cơ bản</td>
+          <td>Phân tích sâu, cảnh báo file nguy hiểm</td>
+        </tr>
+        <tr>
+          <td>Dữ liệu gửi Google</td>
+          <td>Không</td>
+          <td>URL và một số dữ liệu duyệt web</td>
+        </tr>
+        <tr>
+          <td>Mức độ bảo vệ</td>
+          <td>Trung bình</td>
+          <td>Cao hơn ~2x so với Standard</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>🛡 Biện pháp phòng thủ bổ sung</h3>
+    <ul class="defense-list">
+      <li><strong>Chỉ cài extension từ Chrome Web Store chính thức</strong> — tránh cài từ file <code>.crx</code> hoặc link không rõ nguồn gốc. Chrome Web Store có quy trình kiểm duyệt tự động và thủ công.</li>
+      <li><strong>Kiểm tra số lượt cài đặt và đánh giá</strong> — extension uy tín thường có hàng nghìn lượt cài và đánh giá chi tiết. Hãy đọc cả đánh giá tiêu cực.</li>
+      <li><strong>Xem xét kỹ danh sách quyền hạn</strong> — trước khi cài, đọc từng quyền và tự hỏi: "Tại sao extension này cần quyền này?" Từ chối nếu không có lý do hợp lý.</li>
+      <li><strong>Định kỳ kiểm tra và gỡ extension không dùng</strong> — vào <code>chrome://extensions</code> và xóa những extension không còn cần thiết để giảm bề mặt tấn công.</li>
+      <li><strong>Sử dụng profile riêng cho công việc nhạy cảm</strong> — tạo Chrome profile riêng không cài extension nào cho các tác vụ ngân hàng, tài chính quan trọng.</li>
+    </ul>
+
+  </div>
+
+  <script src="dist/popup.js"></script>
+</body>
+</html>
