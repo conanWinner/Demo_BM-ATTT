@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Security Analyzer",
+  "version": "1.0.0",
+  "description": "Phân tích rủi ro extension và cảnh báo trang nhạy cảm",
+  "permissions": ["management", "storage", "activeTab"],
+  "host_permissions": ["http://localhost/*", "http://127.0.0.1/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Security Analyzer"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://localhost/*", "http://127.0.0.1/*"],
+      "js": ["detector.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

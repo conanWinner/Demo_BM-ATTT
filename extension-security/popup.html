@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Security Analyzer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; width: 420px; min-height: 480px; background: #0a1628; color: #e0e0e0; font-size: 13px; }
+    .header { background: #0d2137; border-bottom: 2px solid #1565c0; padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+    .header-icon { font-size: 22px; }
+    .header-title { font-size: 15px; font-weight: 700; color: #64b5f6; }
+    .header-sub { font-size: 11px; color: #7090b0; }
+    .tabs { display: flex; background: #0d2137; border-bottom: 2px solid #1a3a5c; }
+    .tab-btn { flex: 1; padding: 9px 4px; background: none; border: none; color: #7090b0; cursor: pointer; font-size: 11px; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; }
+    .tab-btn.active { color: #64b5f6; border-bottom: 2px solid #64b5f6; }
+    .tab-content { display: none; padding: 14px 16px; overflow-y: auto; max-height: 420px; }
+    .tab-content.active { display: block; }
+    h2 { font-size: 12px; color: #64b5f6; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+    h3 { font-size: 12px; color: #f0a500; margin: 12px 0 6px; }
+
+    /* Risk Score */
+    .risk-card { background: #0d2137; border-radius: 8px; padding: 16px; margin-bottom: 14px; text-align: center; border: 1px solid #1a3a5c; }
+    .risk-number { font-size: 52px; font-weight: 900; line-height: 1; margin-bottom: 4px; }
+    .risk-number.high { color: #e94560; }
+    .risk-number.medium { color: #f0a500; }
+    .risk-number.low { color: #4caf50; }
+    .risk-badge { display: inline-block; padding: 3px 14px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 8px; }
+    .risk-badge.high { background: #2a0a0a; color: #e94560; border: 1px solid #e94560; }
+    .risk-badge.medium { background: #2a1a00; color: #f0a500; border: 1px solid #f0a500; }
+    .risk-badge.low { background: #0a2a0a; color: #4caf50; border: 1px solid #4caf50; }
+    .risk-reason { font-size: 12px; color: #7090b0; margin-top: 6px; }
+    .risk-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 8px; border-radius: 4px; margin-bottom: 4px; background: #0d2137; font-size: 12px; }
+    .risk-row-name { color: #a0c0d8; font-family: monospace; }
+    .risk-row-score.danger { color: #e94560; font-weight: bold; }
+    .risk-row-score.warn { color: #f0a500; font-weight: bold; }
+    .risk-total { display: flex; justify-content: space-between; padding: 7px 8px; border-top: 1px solid #1a3a5c; margin-top: 4px; font-weight: bold; font-size: 13px; }
+
+    /* Extension list */
+    .ext-item { background: #0d2137; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; border-left: 3px solid #e94560; }
+    .ext-item.safe { border-left-color: #4caf50; }
+    .ext-name { font-weight: bold; color: #e0e0e0; font-size: 13px; }
+    .ext-score { font-size: 11px; margin-top: 4px; }
+    .ext-perms { font-size: 11px; color: #7090b0; margin-top: 3px; font-family: monospace; }
+    .badge-high { background: #2a0a0a; color: #e94560; border: 1px solid #e94560; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: bold; }
+    .badge-low { background: #0a2a0a; color: #4caf50; border: 1px solid #4caf50; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: bold; }
+
+    /* Diff table */
+    .diff-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 12px; }
+    .diff-table th { background: #0d2137; color: #64b5f6; padding: 7px 8px; text-align: left; border-bottom: 1px solid #1a3a5c; }
+    .diff-table td { padding: 7px 8px; border-bottom: 1px solid #0d2137; color: #a0c0d8; vertical-align: middle; }
+    .diff-table tr:nth-child(even) td { background: #0d2137; }
+    .principle-box { background: #0d2137; border-left: 3px solid #64b5f6; border-radius: 4px; padding: 10px 12px; margin-top: 10px; font-size: 12px; color: #a8d4f5; line-height: 1.6; }
+    .principle-box strong { color: #64b5f6; display: block; margin-bottom: 4px; }
+
+    /* Defense */
+    .defense-list { list-style: none; padding: 0; }
+    .defense-list li { background: #0d2137; border-left: 3px solid #4caf50; border-radius: 4px; padding: 7px 10px; margin-bottom: 7px; color: #c0d8e8; font-size: 12px; line-height: 1.5; }
+    .defense-list li::before { content: "🛡 "; }
+    .step-list { list-style: none; counter-reset: steps; padding: 0; }
+    .step-list li { counter-increment: steps; background: #0d2137; border-radius: 4px; padding: 8px 10px 8px 36px; margin-bottom: 7px; color: #c0d8e8; font-size: 12px; line-height: 1.5; position: relative; }
+    .step-list li::before { content: counter(steps); position: absolute; left: 10px; top: 8px; background: #1565c0; color: #fff; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; }
+    .settings-link { display: inline-block; background: #0f3460; color: #64b5f6; padding: 4px 10px; border-radius: 4px; font-family: monospace; font-size: 12px; margin: 4px 0; user-select: all; border: 1px solid #1565c0; }
+    .comparison-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12px; }
+    .comparison-table th { background: #0d2137; color: #64b5f6; padding: 6px 8px; text-align: left; }
+    .comparison-table td { padding: 6px 8px; border-bottom: 1px solid #0a1628; color: #a0c0d8; }
+    .comparison-table tr:nth-child(even) td { background: #0d2137; }
+
+    #loading { text-align: center; padding: 30px; color: #7090b0; font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-icon">🛡️</span>
+  <div>
+    <div class="header-title">Security Analyzer</div>
+    <div class="header-sub">Blue Team — Extension Risk Analysis</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="extensions">🔍 Extensions</button>
+  <button class="tab-btn" data-tab="risk">📊 Risk Score</button>
+  <button class="tab-btn" data-tab="diff">⚖️ Least Privilege</button>
+  <button class="tab-btn" data-tab="defense">🛡 Phòng thủ</button>
+</div>
+
+<!-- Tab: Extensions installed -->
+<div id="tab-extensions" class="tab-content active">
+  <h2>Extensions đang cài đặt</h2>
+  <div id="ext-list"><div id="loading">Đang phân tích...</div></div>
+</div>
+
+<!-- Tab: Risk Score (focused on malicious extension) -->
+<div id="tab-risk" class="tab-content">
+  <h2>Risk Score — VietBank Helper</h2>
+  <div class="risk-card">
+    <div class="risk-number high">95</div>
+    <div style="font-size:12px;color:#7090b0;margin-bottom:6px;">/ 100</div>
+    <div class="risk-badge high">HIGH RISK</div>
+    <div class="risk-reason">Extension có thể truy cập mọi trang web và inject script tùy ý — hành vi điển hình của keylogger.</div>
+  </div>
+  <h3>Chi tiết điểm rủi ro</h3>
+  <div class="risk-row"><span class="risk-row-name">&lt;all_urls&gt; host permission</span><span class="risk-row-score danger">+40</span></div>
+  <div class="risk-row"><span class="risk-row-name">scripting permission</span><span class="risk-row-score danger">+25</span></div>
+  <div class="risk-row"><span class="risk-row-name">host_permissions rộng (&gt;10 domains)</span><span class="risk-row-score danger">+10</span></div>
+  <div class="risk-row"><span class="risk-row-name">storage permission</span><span class="risk-row-score warn">+10</span></div>
+  <div class="risk-row"><span class="risk-row-name">background service worker</span><span class="risk-row-score warn">+10</span></div>
+  <div class="risk-total"><span>Tổng điểm rủi ro</span><span style="color:#e94560;">95 / 100</span></div>
+  <div style="margin-top:12px;background:#0d2137;border-radius:6px;padding:10px;font-size:12px;color:#7090b0;line-height:1.6;border:1px solid #1a3a5c;">
+    <strong style="color:#f0a500;">Tại sao điểm cao = nguy hiểm?</strong><br/>
+    Extension có điểm rủi ro cao có <em>khả năng kỹ thuật</em> để đánh cắp dữ liệu từ bất kỳ trang web nào. Điều này không có nghĩa nó chắc chắn độc hại, nhưng rủi ro là rất cao nếu nguồn gốc không rõ ràng.
+  </div>
+</div>
+
+<!-- Tab: Least Privilege -->
+<div id="tab-diff" class="tab-content">
+  <h2>Phân tích Least Privilege</h2>
+  <p style="font-size:12px;color:#7090b0;margin-bottom:12px;">Cùng chức năng demo, nhưng mức quyền khác nhau tạo ra rủi ro rất khác nhau.</p>
+  <table class="diff-table">
+    <thead><tr><th>Chế độ</th><th>Host Permission</th><th>Rủi ro</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>✅ Minimal (đúng chuẩn)<br/><span style="color:#7090b0;font-size:11px;">Chỉ cần cho demo</span></td>
+        <td><code>http://127.0.0.1:3000/*</code></td>
+        <td><span class="badge-low">THẤP</span></td>
+      </tr>
+      <tr>
+        <td>⚠️ Extended<br/><span style="color:#7090b0;font-size:11px;">Quá mức cần thiết</span></td>
+        <td><code>http://localhost/*</code></td>
+        <td><span class="badge-low">THẤP</span></td>
+      </tr>
+      <tr>
+        <td>🔴 Dangerous<br/><span style="color:#e94560;font-size:11px;">VietBank Helper đang dùng</span></td>
+        <td><code>&lt;all_urls&gt;</code></td>
+        <td><span class="badge-high">CAO</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="principle-box">
+    <strong>🔐 Principle of Least Privilege</strong>
+    Mỗi thành phần chỉ nên có đúng quyền tối thiểu cần thiết.<br/><br/>
+    "VietBank Helper" <em>chỉ cần</em> quyền trên <code>localhost:3000</code> để hoạt động, nhưng đang xin quyền trên <strong>toàn bộ internet</strong>. Đây chính xác là hành vi của extension độc hại.
+  </div>
+  <h3 style="margin-top:14px;">Tác động thực tế</h3>
+  <table class="diff-table">
+    <thead><tr><th>Khả năng</th><th>Minimal</th><th>Dangerous</th></tr></thead>
+    <tbody>
+      <tr><td>Đọc mật khẩu ngân hàng</td><td>❌</td><td>✅</td></tr>
+      <tr><td>Theo dõi lịch sử duyệt web</td><td>❌</td><td>✅</td></tr>
+      <tr><td>Inject script vào Gmail</td><td>❌</td><td>✅</td></tr>
+      <tr><td>Chạy demo giáo dục</td><td>✅</td><td>✅</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Tab: Defense -->
+<div id="tab-defense" class="tab-content">
+  <h2>Hướng dẫn phòng thủ</h2>
+  <h3>🔒 Bật Enhanced Safe Browsing</h3>
+  <ol class="step-list">
+    <li>Mở Chrome, nhấn vào thanh địa chỉ.</li>
+    <li>Gõ và nhấn Enter:<br/><span class="settings-link">chrome://settings/security</span></li>
+    <li>Tìm mục <strong>"Safe Browsing"</strong>.</li>
+    <li>Chọn <strong>"Enhanced protection"</strong>.</li>
+  </ol>
+  <h3>📊 Standard vs Enhanced</h3>
+  <table class="comparison-table">
+    <thead><tr><th>Tiêu chí</th><th>Standard</th><th>Enhanced</th></tr></thead>
+    <tbody>
+      <tr><td>Kiểm tra URL</td><td>Danh sách cục bộ</td><td>Thời gian thực</td></tr>
+      <tr><td>Phát hiện extension độc hại</td><td>Hạn chế</td><td>Cảnh báo trước khi cài</td></tr>
+      <tr><td>Mức độ bảo vệ</td><td>Trung bình</td><td>Cao hơn ~2x</td></tr>
+    </tbody>
+  </table>
+  <h3>🛡 Biện pháp bổ sung</h3>
+  <ul class="defense-list">
+    <li><strong>Chỉ cài từ Chrome Web Store chính thức</strong> — tránh file <code>.crx</code> không rõ nguồn gốc.</li>
+    <li><strong>Kiểm tra số lượt cài và đánh giá</strong> — đọc cả đánh giá tiêu cực.</li>
+    <li><strong>Xem xét kỹ quyền hạn</strong> — tự hỏi "Tại sao extension này cần quyền này?"</li>
+    <li><strong>Dùng profile riêng</strong> cho tác vụ ngân hàng, không cài extension nào.</li>
+    <li><strong>Định kỳ vào <code>chrome://extensions</code></strong> xóa extension không dùng.</li>
+  </ul>
+  <div style="margin-top:12px;background:#0d2137;border:1px solid #1565c0;border-radius:6px;padding:12px;font-size:12px;color:#a8d4f5;line-height:1.7;">
+    <strong style="color:#64b5f6;display:block;margin-bottom:6px;">💡 Insight quan trọng</strong>
+    "Không có cơ chế nào trong trình duyệt có thể bảo vệ người dùng khỏi một extension mà họ đã cấp quyền toàn diện. Vì vậy, phòng thủ phải đến từ <strong>nhận thức</strong> và <strong>các công cụ giám sát bổ sung</strong>."
+  </div>
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>
